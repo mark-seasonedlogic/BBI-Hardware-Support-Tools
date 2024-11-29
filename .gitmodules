@@ -1,0 +1,3 @@
+[submodule "Dependencies/AirWatchMDMClient"]
+	path = Dependencies/AirWatchMDMClient
+	url = https://github.com/mark-seasonedlogic/AirWatchMDMClient.git
