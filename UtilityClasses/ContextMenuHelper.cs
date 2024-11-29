@@ -1,9 +1,73 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.IO;
 using System.Windows.Forms;
 
 namespace BBIHardwareSupport.Utilities
 {
+
+    // #region DataExportUtility
+    public static class DataGridExportHelper
+    {
+        public static void ExportDataGridToCsv(DataGridView dataGridView)
+        {
+            if (dataGridView.DataSource is DataTable dataTable)
+            {
+                using (var saveFileDialog = new SaveFileDialog { Filter = "CSV Files (*.csv)|*.csv", FileName = "Export.csv" })
+                {
+                    if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        using (var writer = new StreamWriter(saveFileDialog.FileName))
+                        {
+                            // Write headers
+                            foreach (DataColumn column in dataTable.Columns)
+                            {
+                                writer.Write(QuoteValue(column.ColumnName) + ",");
+                            }
+                            writer.WriteLine();
+
+                            // Write rows
+                            foreach (DataRow row in dataTable.Rows)
+                            {
+                                foreach (var cell in row.ItemArray)
+                                {
+                                    writer.Write(QuoteValue(cell?.ToString()) + ",");
+                                }
+                                writer.WriteLine();
+                            }
+                        }
+                        MessageBox.Show("Data exported successfully.", "Export Complete");
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("No data to export.", "Export Error");
+            }
+        }
+
+        private static string QuoteValue(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+
+            // Escape double quotes and wrap in quotes if it contains commas or quotes
+            if (value.Contains(",") || value.Contains("\""))
+            {
+                value = value.Replace("\"", "\"\"");
+                return $"\"{value}\"";
+            }
+            return value;
+        }
+    }
+
+
+    // #endregion
+
+
+
+
+
     /// <summary>
     /// A helper class to generate context menus dynamically based on plugin types.
     /// </summary>
