@@ -5,7 +5,7 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BBIHardwareSupportTools", "BBIHardwareSupportTools.csproj", "{467E0B73-5CED-4CF7-A4FD-29893D539799}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirWatchMDMClient", "Dependencies\AirWatchMDMClient\AirWatchMDMClient\AirWatchMDMClient.csproj", "{F886FD50-D800-470D-B56C-5B9DD9032A94}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirWatchMDMClient", "..\AirwatchMDMClient\AirWatchMDMClient\AirWatchMDMClient.csproj", "{F886FD50-D800-470D-B56C-5B9DD9032A94}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

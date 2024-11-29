@@ -17,7 +17,7 @@ namespace BBIHardwareSupport
             var plugins = new List<IModulePlugin>
             {
                 new AirwatchDevicesByUser(airWatchApiClient),
-                new AirwatchAppByName(airWatchApiClient),
+                new AirwatchAppsByName(airWatchApiClient),
                 new CompositePlugin(airWatchApiClient)
             };
 

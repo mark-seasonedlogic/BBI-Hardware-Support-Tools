@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using BBIHardwareSupport.Utilities;
 using NLog;
 
 namespace BBIHardwareSupport
@@ -12,7 +13,6 @@ namespace BBIHardwareSupport
     public class MainForm : Form
     {
         private readonly List<IModulePlugin> plugins;
-        private readonly IDataGridModulePlugin _dataGridPlugin;
         private DataGridView dataGrid;
 
         public MainForm(IEnumerable<IModulePlugin> plugins)
@@ -21,7 +21,6 @@ namespace BBIHardwareSupport
             dataGrid = new DataGridView { Dock = DockStyle.Fill };
             InitializeComponents();
             InitializeDynamicMenu();
-            InitializeDynamicContextPerPlugin();
         }
 
         private void InitializeComponents()
@@ -45,25 +44,23 @@ namespace BBIHardwareSupport
             Controls.Add(menuStrip);
             MainMenuStrip = menuStrip;
         }
-        private void InitializeDynamicContextPerPlugin()
-        {
-            foreach (var plugin in plugins)
-            {
-                switch (plugin.GetType())
-                {
-                    default:
-                        break;
-                }
-            }
-        }
 
         private async Task OnPluginClicked(IModulePlugin plugin)
         {
             string parameter = PromptForInput($"Enter parameter for {plugin.Name}");
+
             if (plugin is IDataGridModulePlugin dataGridPlugin)
             {
                 var data = await dataGridPlugin.GetDataGridDataAsync(parameter);
                 dataGrid.DataSource = data;
+
+                // Generate and attach context menu items
+                var contextMenu = new ContextMenuStrip();
+                foreach (var menuItem in dataGridPlugin.GetContextMenuItems(dataGrid))
+                {
+                    contextMenu.Items.Add(menuItem);
+                }
+                dataGrid.ContextMenuStrip = contextMenu;
             }
             else if (plugin is ITextModulePlugin textPlugin)
             {
@@ -85,27 +82,5 @@ namespace BBIHardwareSupport
                 return form.ShowDialog() == DialogResult.OK ? textBox.Text : string.Empty;
             }
         }
-        private void InitializeContextMenu()
-        {
-            var contextMenu = new ContextMenuStrip();
-
-            var menuItems = _dataGridPlugin.GetContextMenuItems(dg =>
-            {
-                // Example context-sensitive action (no return value)
-                if (dg == dataGrid)
-                {
-                    // Perform some action here on the DataGridView
-                    dg.BackgroundColor = Color.LightGray; // Example
-                }
-            });
-
-            foreach (var item in menuItems)
-            {
-                contextMenu.Items.Add(item);
-            }
-
-            dataGrid.ContextMenuStrip = contextMenu;
-        }
-
     }
 }

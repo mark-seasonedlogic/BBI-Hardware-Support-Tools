@@ -9,7 +9,7 @@ namespace BBIHardwareSupport
     public interface IDataGridModulePlugin : IModulePlugin
     {
         Task<DataTable> GetDataGridDataAsync(string parameter);
-        IEnumerable<ToolStripMenuItem> GetContextMenuItems(Action<DataGridView> dataGridAction);
+        IEnumerable<ToolStripMenuItem> GetContextMenuItems(DataGridView grid);
 
     }
 }
