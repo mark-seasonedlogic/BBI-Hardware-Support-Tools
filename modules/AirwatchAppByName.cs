@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Management.Automation;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using BBIHardwareSupport.Utilities;
@@ -53,15 +54,51 @@ namespace BBIHardwareSupport
             return dataTable;
         }
 
+        public async Task<DataTable> GetAssignmentDataGridDataAsync(string smartGroups)
+        {
+            logger.Info("Fetching assignment data from Airwatch application data...");
+            JArray groupsJArray = JArray.Parse(smartGroups);
+
+            var dataTable = new DataTable();
+            foreach (var smartGroup in groupsJArray)
+            {
+                if (dataTable.Columns.Count == 0)
+                {
+                    foreach (var property in smartGroup.Children<JProperty>())
+                    {
+                        dataTable.Columns.Add(property.Name, typeof(string));
+                    }
+                }
+
+                var row = dataTable.NewRow();
+                foreach (var property in smartGroup.Children<JProperty>())
+                {
+                    row[property.Name] = property.Value.ToString();
+                }
+                dataTable.Rows.Add(row);
+            }
+            return dataTable;
+        }
+
         public IEnumerable<ToolStripMenuItem> GetContextMenuItems(DataGridView grid)
         {
             logger.Debug("Generating context menu items for AirwatchAppsByName");
 
-            return new List<ToolStripMenuItem>
+            var refreshMenuItem = CreateMenuItem("Refresh Data", async (sender, e) => await OnRefreshDataClicked(grid));
+            var getAssignmentMenuItem = CreateMenuItem("Get Assignment Groups", async (sender, e) => await OnGetAssignmentClicked(grid));
+            var exportMenuItem = CreateMenuItem("Export to CSV", (sender, e) => OnExportToCsvClicked(grid));
+
+            // Initially disable the getAssignmentMenuItem
+            getAssignmentMenuItem.Enabled = false;
+
+            // Add event handlers to enable/disable getAssignmentMenuItem based on row selection
+            grid.SelectionChanged += (sender, e) =>
             {
-                CreateMenuItem("Refresh Data", async (sender, e) => await OnRefreshDataClicked(grid)),
-                CreateMenuItem("Export to CSV", (sender, e) => OnExportToCsvClicked(grid))
+                // Enable only if exactly one row is selected
+                getAssignmentMenuItem.Enabled = grid.SelectedRows.Count == 1;
             };
+
+            return new List<ToolStripMenuItem> { refreshMenuItem, getAssignmentMenuItem, exportMenuItem };
         }
 
         private ToolStripMenuItem CreateMenuItem(string text, EventHandler onClickHandler)
@@ -86,6 +123,27 @@ namespace BBIHardwareSupport
             grid.DataSource = data;
         }
 
+        private async Task OnGetAssignmentClicked(DataGridView grid)
+        {
+            logger.Info("Get Assignment Groups action triggered.");
+            if (grid == null || grid.SelectedRows.Count != 1)
+            {
+                logger.Error("DataGridView is null or no row is selected. Cannot fetch assignment groups.");
+                return;
+            }
+
+            var selectedRow = grid.SelectedRows[0];
+            var smartGroups = selectedRow.Cells["SmartGroups"]?.Value?.ToString();
+            if (string.IsNullOrEmpty(smartGroups))
+            {
+                logger.Error("No assignment groups found in the selected row.");
+                return;
+            }
+
+            var data = await GetAssignmentDataGridDataAsync(smartGroups);
+            grid.DataSource = data;
+        }
+
         private void OnExportToCsvClicked(DataGridView grid)
         {
             logger.Info("Export to CSV action triggered.");
@@ -97,7 +155,6 @@ namespace BBIHardwareSupport
 
             DataGridExportHelper.ExportDataGridToCsv(grid);
         }
-
 
         private string PromptForInput(string prompt)
         {
